@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   Card,
@@ -11,51 +9,52 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import UserProps from "./app";
+import { Usuario } from "@/app/page";
 
-interface Props {
-  currentUser: UserProps;
-  onUpdateUser: (data: UserProps) => void;
+interface ConfiguracionContenidoProps {
+  usuarioActual: Usuario;
+  actualizarUsuario: (usuario: Usuario) => void;
 }
 
-export function SettingsContentComponent({ currentUser, onUpdateUser }: Props) {
+export function Configuracion({
+  usuarioActual,
+  actualizarUsuario,
+}: ConfiguracionContenidoProps) {
   const [formData, setFormData] = useState({
-    name: currentUser.name,
-    email: currentUser.email,
-    password: "",
+    nombre: usuarioActual.nombre,
+    email: usuarioActual.email,
+    contrasena: "",
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const manejarEnvio = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onUpdateUser({
-      id: currentUser.id,
-      name: formData.name,
+    actualizarUsuario({
+      ...usuarioActual,
+      nombre: formData.nombre,
       email: formData.email,
-      password: formData.password,
-      role: currentUser.role,
     });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Settings</CardTitle>
+        <CardTitle>Configuración</CardTitle>
         <CardDescription>
-          Manage your account settings and preferences.
+          Administre la configuración de su cuenta y preferencias.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={manejarEnvio}>
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="nombre">Nombre</Label>
               <Input
-                id="name"
-                value={formData.name}
+                id="nombre"
+                value={formData.nombre}
                 onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, nombre: e.target.value })
                 }
-                placeholder="Your name"
+                placeholder="Su nombre"
               />
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -66,23 +65,23 @@ export function SettingsContentComponent({ currentUser, onUpdateUser }: Props) {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                placeholder="Your email"
+                placeholder="Su email"
                 type="email"
               />
             </div>
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="contrasena">Nueva Contraseña</Label>
               <Input
-                id="password"
-                value={formData.password}
+                id="contrasena"
+                value={formData.contrasena}
                 onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
+                  setFormData({ ...formData, contrasena: e.target.value })
                 }
-                placeholder="Enter new password"
+                placeholder="Ingrese nueva contraseña"
                 type="password"
               />
             </div>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">Guardar Cambios</Button>
           </div>
         </form>
       </CardContent>
