@@ -5,6 +5,7 @@ import {
   Home,
   Sprout,
   ShoppingBag,
+  ShoppingBasket,
   FileText,
   Bell,
   PieChart,
@@ -30,36 +31,32 @@ export function BarraLateral({
   const [isOpen, setIsOpen] = useState(false);
 
   const elementosNav = [
-    { nombre: "inicio", icono: Home, etiqueta: "Inicio" },
+    { nombre: "Inicio", icono: Home },
     {
-      nombre: "productos-disponibles",
+      nombre: "Productos",
       icono: Sprout,
-      etiqueta: "Mercado Fresco",
     },
     {
-      nombre: "productos-administracion",
+      nombre: "Mis Productos",
       icono: ShoppingBag,
-      etiqueta: "Gestión de Productos",
     },
-    { nombre: "carrito", icono: ShoppingBag, etiqueta: "Mi Canasta" },
+    { nombre: "Carrito", icono: ShoppingBasket },
     {
-      nombre: "historial-transacciones",
+      nombre: "Historial",
       icono: FileText,
-      etiqueta: "Mis Compras y Ventas",
     },
-    { nombre: "alertas", icono: Bell, etiqueta: "Notificaciones" },
+    { nombre: "Alertas", icono: Bell },
     {
-      nombre: "estadisticas",
+      nombre: "Estadísticas",
       icono: PieChart,
-      etiqueta: "Análisis de Cosechas",
     },
     {
-      nombre: "usuarios",
+      nombre: "Usuarios",
       icono: Users,
-      etiqueta: "Comunidad Agrícola",
+
       soloAdmin: true,
     },
-    { nombre: "configuracion", icono: Settings, etiqueta: "Configuración" },
+    { nombre: "Configuracion", icono: Settings },
   ];
 
   const NavContent = () => (
@@ -81,7 +78,7 @@ export function BarraLateral({
             }}
           >
             <elemento.icono className="h-5 w-5 mr-3" />
-            <span>{elemento.etiqueta}</span>
+            <span>{elemento.nombre}</span>
           </Button>
         );
       })}

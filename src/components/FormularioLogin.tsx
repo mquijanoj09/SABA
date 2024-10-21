@@ -25,7 +25,6 @@ export function FormularioLogin({ onLogin, error }: FormularioLoginProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login:", { email, contrasena });
     onLogin(email, contrasena);
   };
 
@@ -35,7 +34,6 @@ export function FormularioLogin({ onLogin, error }: FormularioLoginProps) {
     contrasena: string,
     rol: string
   ) => {
-    console.log("Crear cuenta:", { nombre, email, contrasena, rol });
     onLogin(email, contrasena);
     setMostrarCrearCuenta(false);
   };

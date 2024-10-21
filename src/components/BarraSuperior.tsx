@@ -15,12 +15,14 @@ interface BarraSuperiorProps {
   usuarioActual: Usuario | null;
   onLogout: () => void;
   carrito: ItemCarrito[];
+  setSeccionActiva: (seccion: string) => void;
   eliminarDelCarrito: (productoId: number) => void;
 }
 
 export function BarraSuperior({
   seccionActiva,
   usuarioActual,
+  setSeccionActiva,
   onLogout,
   carrito,
 }: BarraSuperiorProps) {
@@ -60,14 +62,19 @@ export function BarraSuperior({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="outline" size="icon">
-              <ShoppingCart className="h-4 w-4" />
-              {carrito.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                  {carrito.length}
-                </span>
-              )}
-            </Button>
+            <div
+              className="relative"
+              onClick={() => setSeccionActiva("Carrito")}
+            >
+              <Button variant="outline" size="icon">
+                <ShoppingCart className="h-4 w-4" />
+                {carrito.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {carrito.length}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

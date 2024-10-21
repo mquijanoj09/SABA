@@ -112,7 +112,7 @@ export function ProductosDisponibles({
               type="number"
               min="1"
               max={producto.cantidad}
-              value={cantidades[producto.id] || ""}
+              value={cantidades[producto.id] || 1}
               onChange={(e) =>
                 manejarCambioCantidad(producto.id, parseInt(e.target.value))
               }

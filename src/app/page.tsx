@@ -128,13 +128,13 @@ export default function Home() {
     }
 
     switch (seccionActiva) {
-      case "inicio":
+      case "Inicio":
         return <Inicio />;
-      case "productos-disponibles":
+      case "Productos":
         return <ProductosDisponibles agregarAlCarrito={agregarAlCarrito} />;
-      case "productos-administracion":
+      case "Mis Productos":
         return <AdministracionProductos />;
-      case "carrito":
+      case "Carrito":
         return (
           <Carrito
             carrito={carrito}
@@ -142,13 +142,13 @@ export default function Home() {
             actualizarCantidadCarrito={actualizarCantidadCarrito}
           />
         );
-      case "historial-transacciones":
+      case "Historial":
         return <HistorialTransacciones />;
-      case "alertas":
+      case "Alertas":
         return <Alertas />;
-      case "estadisticas":
+      case "Estadísticas":
         return <Estadisticas />;
-      case "usuarios":
+      case "Usuarios":
         return usuarioActual.rol === "administrador" ? (
           <GestionUsuarios
             usuarios={usuarios}
@@ -157,7 +157,7 @@ export default function Home() {
         ) : (
           <ContenidoNoAutorizado />
         );
-      case "configuracion":
+      case "Configuracion":
         return (
           <Configuracion
             usuarioActual={usuarioActual}
@@ -186,6 +186,7 @@ export default function Home() {
       />
       <div className="flex-1 flex flex-col">
         <BarraSuperior
+          setSeccionActiva={setSeccionActiva}
           seccionActiva={seccionActiva}
           usuarioActual={usuarioActual}
           onLogout={manejarLogout}
