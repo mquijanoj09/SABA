@@ -1,90 +1,60 @@
 "use client";
 
 import { useState } from "react";
-import { ProductosDisponibles } from "../components/ProductosDisponibles";
-import { AdministracionProductos } from "../components/AdministracionProductos";
-import { Carrito } from "../components/Carrito";
-import { HistorialTransacciones } from "../components/HistorialTransacciones";
-import { Alertas } from "../components/Alertas";
-import { Estadisticas } from "../components/Estadisticas";
-import { GestionUsuarios } from "../components/GestionUsuarios";
-import { ContenidoNoAutorizado } from "../components/ContenidoNoAutorizado";
-import { Configuracion } from "../components/Configuracion";
-import { BarraLateral } from "../components/BarraLateral";
-import { BarraSuperior } from "../components/BarraSuperior";
-import { Inicio } from "../components/Inicio";
-import { FormularioLogin } from "../components/FormularioLogin";
-
-export interface Usuario {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: string;
-  contrasena: string;
-}
-
-export interface Producto {
-  id: number;
-  nombre: string;
-  cantidad: number;
-  precio: number;
-  ubicacion: string;
-  imagen: string;
-  region: string;
-  descripcion: string;
-}
-
-export interface ItemCarrito {
-  producto: Producto;
-  cantidad: number;
-}
+import { ProductosDisponibles } from "@/components/ProductosDisponibles";
+import { AdministracionProductos } from "@/components/AdministracionProductos";
+import { Carrito } from "@/components/Carrito";
+import { HistorialTransacciones } from "@/components/HistorialTransacciones";
+import { Alertas } from "@/components/Alertas";
+import { Estadisticas } from "@/components/Estadisticas";
+import { GestionUsuarios } from "@/components/GestionUsuarios";
+import { ContenidoNoAutorizado } from "@/components/ContenidoNoAutorizado";
+import { Configuracion } from "@/components/Configuracion";
+import { BarraLateral } from "@/components/BarraLateral";
+import { BarraSuperior } from "@/components/BarraSuperior";
+import { Inicio } from "@/components/Inicio";
+import { FormularioLogin } from "@/components/FormularioLogin";
+import { Usuario, Producto, ItemCarrito } from "@/types";
 
 const usuarios: Usuario[] = [
   {
     id: 1,
-    nombre: "Usuario Administrador",
-    email: "admin@ejemplo.com",
+    nombre: "Admin",
+    email: "a@a.com",
     rol: "administrador",
-    contrasena: "admin123",
+    contrasena: "a",
   },
   {
     id: 2,
     nombre: "Usuario OAF",
-    email: "oaf@ejemplo.com",
+    email: "oaf@saba.com",
     rol: "oaf",
     contrasena: "oaf123",
   },
   {
     id: 3,
-    nombre: "Usuario Productor",
-    email: "productor@ejemplo.com",
+    nombre: "Productor",
+    email: "productor@saba.com",
     rol: "productor",
     contrasena: "productor123",
   },
   {
     id: 4,
-    nombre: "Usuario Cooperativa",
-    email: "coop@ejemplo.com",
+    nombre: "Cooperativa",
+    email: "cooperativa@saba.com",
     rol: "cooperativa",
-    contrasena: "coop123",
+    contrasena: "cooperativa123",
   },
   {
     id: 5,
-    nombre: "Usuario Consumidor",
-    email: "consumidor@ejemplo.com",
+    nombre: "Consumidor",
+    email: "consumidor@saba.com",
     rol: "consumidor",
     contrasena: "consumidor123",
   },
-  {
-    id: 6,
-    nombre: "Usuario Consumidor",
-    email: "a@a.com",
-    rol: "administrador",
-    contrasena: "a",
-  },
 ];
 
-export default function AppComponente() {
+export default function Home() {
   const [seccionActiva, setSeccionActiva] = useState("inicio");
   const [usuarioActual, setUsuarioActual] = useState<Usuario | null>(null);
   const [errorLogin, setErrorLogin] = useState("");
@@ -201,20 +171,20 @@ export default function AppComponente() {
 
   if (!usuarioActual) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
         {renderizarContenido()}
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       <BarraLateral
         seccionActiva={seccionActiva}
         onNavegacion={setSeccionActiva}
         tipoUsuario={usuarioActual.rol}
       />
-      <main className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col">
         <BarraSuperior
           seccionActiva={seccionActiva}
           usuarioActual={usuarioActual}
@@ -222,8 +192,10 @@ export default function AppComponente() {
           carrito={carrito}
           eliminarDelCarrito={eliminarDelCarrito}
         />
-        <div className="p-6">{renderizarContenido()}</div>
-      </main>
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-green-50 to-blue-50 p-6">
+          {renderizarContenido()}
+        </main>
+      </div>
     </div>
   );
 }

@@ -28,7 +28,7 @@ export function AdministracionProductos() {
       cantidad: 500,
       precio: 1.2,
       ubicacion: "Almacén Sur",
-      imagen: "https://ejemplo.com/maiz.jpg",
+      imagen: "",
       region: "Sierra",
       descripcion: "Maíz fresco de la sierra",
     },

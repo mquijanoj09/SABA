@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Usuario } from "@/app/page";
+import { Usuario } from "@/types";
 
 interface UsuariosContenidoProps {
   usuarios: Usuario[];
