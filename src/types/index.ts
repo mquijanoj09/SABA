@@ -1,13 +1,13 @@
 export interface Usuario {
-  id: number;
+  id: string;
   nombre: string;
   email: string;
   rol: string;
-  contrasena: string;
+  created_at: string;
 }
 
 export interface Producto {
-  id: number;
+  id: string;
   nombre: string;
   cantidad: number;
   precio: number;
@@ -15,9 +15,24 @@ export interface Producto {
   imagen: string;
   region: string;
   descripcion: string;
+  usuario_id: string;
+  created_at: string;
 }
 
 export interface ItemCarrito {
-  producto: Producto;
+  id: string;
+  producto_id: string;
+  usuario_id: string;
   cantidad: number;
+  created_at: string;
+}
+
+export interface Transaccion {
+  id: string;
+  usuario_id: string;
+  producto_id: string;
+  cantidad: number;
+  precio_total: number;
+  tipo: "compra" | "venta";
+  created_at: string;
 }

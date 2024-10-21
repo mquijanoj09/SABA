@@ -16,7 +16,6 @@ interface BarraSuperiorProps {
   onLogout: () => void;
   carrito: ItemCarrito[];
   setSeccionActiva: (seccion: string) => void;
-  eliminarDelCarrito: (productoId: number) => void;
 }
 
 export function BarraSuperior({
@@ -29,11 +28,12 @@ export function BarraSuperior({
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-end items-center md:justify-between py-4">
+        <div className="flex items-center justify-between py-4">
           <h1 className="text-2xl font-semibold text-gray-900 hidden md:block">
             {seccionActiva}
           </h1>
-          <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-green-700 ml-12">SABA</h1>
+          <div className="flex items-center justify-end space-x-4">
             <div className="">Hola! {usuarioActual?.nombre}</div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -1,66 +1,92 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Bell } from "lucide-react";
+"use client";
 
-export function Alertas() {
-  const alertas = [
-    {
-      id: 1,
-      tipo: "suministro",
-      mensaje: "Los tomates están escasos en el Área Urbana 2.",
-    },
-    {
-      id: 2,
-      tipo: "clima",
-      mensaje: "Se espera lluvia intensa en el Área Rural 1 la próxima semana.",
-    },
-    {
-      id: 3,
-      tipo: "demanda",
-      mensaje: "Alta demanda de vegetales orgánicos en el Área Urbana 3.",
-    },
-  ];
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Bell } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+interface Alerta {
+  id: string;
+  usuario_id: string;
+  mensaje: string;
+  tipo: "info" | "warning" | "error";
+  created_at: string;
+}
+
+interface AlertasProps {
+  usuarioId: string;
+}
+
+export function Alertas({ usuarioId }: AlertasProps) {
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+
+  useEffect(() => {
+    const fetchAlertas = async () => {
+      const { data, error } = await supabase
+        .from("alertas")
+        .select("*")
+        .eq("usuario_id", usuarioId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching alerts:", error);
+      } else if (data) {
+        setAlertas(data);
+      }
+    };
+    fetchAlertas();
+    const channel = supabase
+      .channel("alertas")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "alertas" },
+        (payload) => {
+          if (payload.new.usuario_id === usuarioId) {
+            setAlertas((prevAlertas) => [
+              payload.new as Alerta,
+              ...prevAlertas,
+            ]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [usuarioId]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Alertas</CardTitle>
-        <CardDescription>
-          Notificaciones importantes y alertas meteorológicas.
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold text-green-700">
+          Alertas y Notificaciones
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {alertas.map((alerta) => (
-            <div
-              key={alerta.id}
-              className="flex items-center space-x-4 rounded-md border p-4"
-            >
-              <Bell
-                className={`h-4 w-4 ${
-                  alerta.tipo === "clima" ? "text-blue-500" : "text-amber-500"
-                }`}
-              />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {alerta.tipo === "clima"
-                    ? "Alerta Meteorológica"
-                    : alerta.tipo === "suministro"
-                    ? "Alerta de Suministro"
-                    : "Alerta de Demanda"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {alerta.mensaje}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {alertas.length === 0 ? (
+          <p className="text-center text-gray-500">No hay alertas nuevas.</p>
+        ) : (
+          <div className="space-y-4">
+            {alertas.map((alerta) => (
+              <Alert
+                key={alerta.id}
+                variant={alerta.tipo === "error" ? "destructive" : "default"}
+              >
+                <Bell className="h-4 w-4" />
+                <AlertTitle>
+                  {alerta.tipo === "info"
+                    ? "Información"
+                    : alerta.tipo === "warning"
+                    ? "Advertencia"
+                    : "Error"}
+                </AlertTitle>
+                <AlertDescription>{alerta.mensaje}</AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

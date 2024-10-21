@@ -4,14 +4,13 @@ import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -19,26 +18,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
 
 interface CrearCuentaProps {
-  onCrearCuenta: (
-    nombre: string,
-    email: string,
-    contrasena: string,
-    rol: string
-  ) => void;
   onCancelar: () => void;
 }
 
-export function CrearCuenta({ onCrearCuenta, onCancelar }: CrearCuentaProps) {
+export function CrearCuenta({ onCancelar }: CrearCuentaProps) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [rol, setRol] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onCrearCuenta(nombre, email, contrasena, rol);
+    setError("");
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password: contrasena,
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
+    if (data.user) {
+      const { error: insertError } = await supabase
+        .from("usuarios")
+        .insert({ id: data.user.id, nombre, email, rol });
+
+      if (insertError) {
+        setError(insertError.message);
+        // You might want to delete the auth user here if the profile creation fails
+        return;
+      }
+
+      // Redirect or show success message
+      alert("Cuenta creada exitosamente. Por favor, inicie sesión.");
+    }
   };
 
   return (
@@ -47,7 +67,6 @@ export function CrearCuenta({ onCrearCuenta, onCancelar }: CrearCuentaProps) {
         <CardTitle className="text-2xl font-bold text-green-700">
           Crear Cuenta
         </CardTitle>
-        <CardDescription>Únete a la comunidad SABA</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,7 +74,6 @@ export function CrearCuenta({ onCrearCuenta, onCancelar }: CrearCuentaProps) {
             <Label htmlFor="nombre">Nombre</Label>
             <Input
               id="nombre"
-              type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               required
@@ -94,19 +112,20 @@ export function CrearCuenta({ onCrearCuenta, onCancelar }: CrearCuentaProps) {
               </SelectContent>
             </Select>
           </div>
+          {error && <p className="text-red-500">{error}</p>}
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={onCancelar}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Crear Cuenta
+            </Button>
+          </CardFooter>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={onCancelar}>
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          className="bg-green-600 hover:bg-green-700 text-white"
-        >
-          Crear Cuenta
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { CrearCuenta } from "./CrearCuenta";
 
 interface FormularioLoginProps {
@@ -26,36 +20,19 @@ export function FormularioLogin({ onLogin, error }: FormularioLoginProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onLogin(email, contrasena);
-  };
-
-  const handleCrearCuenta = (
-    nombre: string,
-    email: string,
-    contrasena: string,
-    rol: string
-  ) => {
-    onLogin(email, contrasena);
     setMostrarCrearCuenta(false);
   };
 
   if (mostrarCrearCuenta) {
-    return (
-      <CrearCuenta
-        onCrearCuenta={handleCrearCuenta}
-        onCancelar={() => setMostrarCrearCuenta(false)}
-      />
-    );
+    return <CrearCuenta onCancelar={() => setMostrarCrearCuenta(false)} />;
   }
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-green-700">
-          Bienvenido a SABA
+          Iniciar Sesión
         </CardTitle>
-        <CardDescription>
-          Inicie sesión para acceder a su cuenta
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -79,21 +56,19 @@ export function FormularioLogin({ onLogin, error }: FormularioLoginProps) {
               required
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-red-500">{error}</p>}
           <Button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white"
           >
             Iniciar Sesión
           </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setMostrarCrearCuenta(true)}
-          >
-            Crear Cuenta
-          </Button>
         </form>
+        <div className="mt-4 text-center">
+          <Button onClick={() => setMostrarCrearCuenta(true)} variant="link">
+            ¿No tienes una cuenta? Regístrate aquí
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

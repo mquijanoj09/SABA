@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { Producto } from "@/types";
+import { supabase } from "@/lib/supabase";
 
 interface ProductosDisponiblesProps {
   agregarAlCarrito: (producto: Producto, cantidad: number) => void;
@@ -22,54 +23,28 @@ interface ProductosDisponiblesProps {
 export function ProductosDisponibles({
   agregarAlCarrito,
 }: ProductosDisponiblesProps) {
-  const [productosDisponibles] = useState<Producto[]>([
-    {
-      id: 1,
-      nombre: "Tomates Orgánicos",
-      cantidad: 100,
-      precio: 2.99,
-      ubicacion: "Almacén Central",
-      imagen: "/placeholder.svg?height=200&width=200",
-      region: "Costa",
-      descripcion:
-        "Tomates frescos y jugosos de la costa, cultivados sin pesticidas.",
-    },
-    {
-      id: 2,
-      nombre: "Papas Andinas",
-      cantidad: 200,
-      precio: 1.5,
-      ubicacion: "Almacén Norte",
-      imagen: "/placeholder.svg?height=200&width=200",
-      region: "Sierra",
-      descripcion:
-        "Papas nativas de los Andes, perfectas para freír o cocinar al horno.",
-    },
-    {
-      id: 3,
-      nombre: "Plátanos Verdes",
-      cantidad: 150,
-      precio: 1.2,
-      ubicacion: "Almacén Sur",
-      imagen: "/placeholder.svg?height=200&width=200",
-      region: "Costa",
-      descripcion: "Plátanos verdes ideales para patacones o chifles.",
-    },
-    {
-      id: 4,
-      nombre: "Quinua Real",
-      cantidad: 80,
-      precio: 3.5,
-      ubicacion: "Almacén Central",
-      imagen: "/placeholder.svg?height=200&width=200",
-      region: "Sierra",
-      descripcion: "Quinua de alta calidad, rica en proteínas y nutrientes.",
-    },
-  ]);
+  const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>(
+    []
+  );
+  const [cantidades, setCantidades] = useState<{ [key: string]: number }>({});
 
-  const [cantidades, setCantidades] = useState<{ [key: number]: number }>({});
+  useEffect(() => {
+    const fetchProductos = async () => {
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*")
+        .gt("cantidad", 0);
 
-  const manejarCambioCantidad = (id: number, cantidad: number) => {
+      if (error) {
+        console.error("Error fetching products:", error);
+      } else if (data) {
+        setProductosDisponibles(data);
+      }
+    };
+    fetchProductos();
+  }, []);
+
+  const manejarCambioCantidad = (id: string, cantidad: number) => {
     setCantidades({ ...cantidades, [id]: cantidad });
   };
 
@@ -112,7 +87,7 @@ export function ProductosDisponibles({
               type="number"
               min="1"
               max={producto.cantidad}
-              value={cantidades[producto.id] || 1}
+              value={cantidades[producto.id] || ""}
               onChange={(e) =>
                 manejarCambioCantidad(producto.id, parseInt(e.target.value))
               }

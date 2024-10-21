@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductosDisponibles } from "@/components/ProductosDisponibles";
 import { AdministracionProductos } from "@/components/AdministracionProductos";
 import { Carrito } from "@/components/Carrito";
@@ -15,111 +15,130 @@ import { BarraSuperior } from "@/components/BarraSuperior";
 import { Inicio } from "@/components/Inicio";
 import { FormularioLogin } from "@/components/FormularioLogin";
 import { Usuario, Producto, ItemCarrito } from "@/types";
-
-const usuarios: Usuario[] = [
-  {
-    id: 1,
-    nombre: "Admin",
-    email: "a@a.com",
-    rol: "administrador",
-    contrasena: "a",
-  },
-  {
-    id: 2,
-    nombre: "Usuario OAF",
-    email: "oaf@saba.com",
-    rol: "oaf",
-    contrasena: "oaf123",
-  },
-  {
-    id: 3,
-    nombre: "Productor",
-    email: "productor@saba.com",
-    rol: "productor",
-    contrasena: "productor123",
-  },
-  {
-    id: 4,
-    nombre: "Cooperativa",
-    email: "cooperativa@saba.com",
-    rol: "cooperativa",
-    contrasena: "cooperativa123",
-  },
-  {
-    id: 5,
-    nombre: "Consumidor",
-    email: "consumidor@saba.com",
-    rol: "consumidor",
-    contrasena: "consumidor123",
-  },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
-  const [seccionActiva, setSeccionActiva] = useState("inicio");
+  const [seccionActiva, setSeccionActiva] = useState("Inicio");
   const [usuarioActual, setUsuarioActual] = useState<Usuario | null>(null);
   const [errorLogin, setErrorLogin] = useState("");
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
 
-  const manejarLogin = (email: string, contrasena: string) => {
-    const usuario = usuarios.find(
-      (u) => u.email === email && u.contrasena === contrasena
-    );
-    if (usuario) {
-      setUsuarioActual(usuario);
-      setSeccionActiva("inicio");
-      setErrorLogin("");
-    } else {
-      setErrorLogin("Email o contraseña inválidos");
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (data.session) {
+        fetchUsuario(data.session.user.id);
+      } else if (error) {
+        console.error("Error fetching session:", error);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  const fetchUsuario = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user:", error);
+    } else if (data) {
+      setUsuarioActual(data);
     }
   };
 
-  const manejarLogout = () => {
+  const manejarLogin = async (email: string, contrasena: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: contrasena,
+    });
+
+    if (error) {
+      setErrorLogin(error.message);
+    } else if (data.session?.user) {
+      fetchUsuario(data.session.user.id);
+      setSeccionActiva("Inicio");
+      setErrorLogin("");
+    }
+  };
+
+  const manejarLogout = async () => {
+    await supabase.auth.signOut();
     setUsuarioActual(null);
-    setSeccionActiva("inicio");
+    setSeccionActiva("Inicio");
     setCarrito([]);
   };
 
-  const actualizarUsuario = (usuarioActualizado: Usuario) => {
-    setUsuarioActual((prevUsuario) => ({
-      ...prevUsuario!,
-      ...usuarioActualizado,
-    }));
+  const actualizarUsuario = async (usuarioActualizado: Partial<Usuario>) => {
+    if (!usuarioActual) return;
+
+    const { data, error } = await supabase
+      .from("usuarios")
+      .update(usuarioActualizado)
+      .eq("id", usuarioActual.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating user:", error);
+    } else if (data) {
+      setUsuarioActual((prev) => {
+        if (!prev) return null; // Ensure `prev` is not null for safety
+        return { ...prev, ...data } as Usuario;
+      });
+    }
   };
 
-  const agregarAlCarrito = (producto: Producto, cantidad: number) => {
-    setCarrito((prevCarrito) => {
-      const itemExistente = prevCarrito.find(
-        (item) => item.producto.id === producto.id
-      );
-      if (itemExistente) {
-        return prevCarrito.map((item) =>
-          item.producto.id === producto.id
-            ? { ...item, cantidad: item.cantidad + cantidad }
-            : item
-        );
-      } else {
-        return [...prevCarrito, { producto, cantidad }];
-      }
-    });
+  const agregarAlCarrito = async (producto: Producto, cantidad: number) => {
+    if (!usuarioActual) return;
+
+    const { data, error } = await supabase
+      .from("carrito")
+      .insert({
+        usuario_id: usuarioActual.id,
+        producto_id: producto.id,
+        cantidad,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding to cart:", error);
+    } else if (data) {
+      setCarrito([...carrito, data]);
+    }
   };
 
-  const eliminarDelCarrito = (productoId: number) => {
-    setCarrito((prevCarrito) =>
-      prevCarrito.filter((item) => item.producto.id !== productoId)
-    );
+  const eliminarDelCarrito = async (itemId: string) => {
+    const { error } = await supabase.from("carrito").delete().eq("id", itemId);
+
+    if (error) {
+      console.error("Error removing from cart:", error);
+    } else {
+      setCarrito(carrito.filter((item) => item.id !== itemId));
+    }
   };
 
-  const actualizarCantidadCarrito = (
-    productoId: number,
+  const actualizarCantidadCarrito = async (
+    itemId: string,
     nuevaCantidad: number
   ) => {
-    setCarrito((prevCarrito) =>
-      prevCarrito.map((item) =>
-        item.producto.id === productoId
-          ? { ...item, cantidad: nuevaCantidad }
-          : item
-      )
-    );
+    const { data, error } = await supabase
+      .from("carrito")
+      .update({ cantidad: nuevaCantidad })
+      .eq("id", itemId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating cart quantity:", error);
+    } else if (data) {
+      setCarrito(carrito.map((item) => (item.id === itemId ? data : item)));
+    }
   };
 
   const renderizarContenido = () => {
@@ -133,7 +152,7 @@ export default function Home() {
       case "Productos":
         return <ProductosDisponibles agregarAlCarrito={agregarAlCarrito} />;
       case "Mis Productos":
-        return <AdministracionProductos />;
+        return <AdministracionProductos usuarioId={usuarioActual.id} />;
       case "Carrito":
         return (
           <Carrito
@@ -143,17 +162,14 @@ export default function Home() {
           />
         );
       case "Historial":
-        return <HistorialTransacciones />;
+        return <HistorialTransacciones usuarioId={usuarioActual.id} />;
       case "Alertas":
-        return <Alertas />;
+        return <Alertas usuarioId={usuarioActual.id} />;
       case "Estadísticas":
-        return <Estadisticas />;
+        return <Estadisticas usuarioId={usuarioActual.id} />;
       case "Usuarios":
         return usuarioActual.rol === "administrador" ? (
-          <GestionUsuarios
-            usuarios={usuarios}
-            actualizarUsuario={actualizarUsuario}
-          />
+          <GestionUsuarios />
         ) : (
           <ContenidoNoAutorizado />
         );
@@ -191,7 +207,6 @@ export default function Home() {
           usuarioActual={usuarioActual}
           onLogout={manejarLogout}
           carrito={carrito}
-          eliminarDelCarrito={eliminarDelCarrito}
         />
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-green-50 to-blue-50 p-6">
           {renderizarContenido()}
