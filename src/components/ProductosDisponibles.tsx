@@ -30,13 +30,29 @@ export function ProductosDisponibles({
 
   useEffect(() => {
     const fetchProductos = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Error obteniendo el usuario actual:", userError);
+        return;
+      }
+
+      if (!user) {
+        console.error("No hay usuario autenticado");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("productos")
         .select("*")
-        .gt("cantidad", 0);
+        .gt("cantidad", 0)
+        .neq("usuario_id", user.id);
 
       if (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error obteniendo productos:", error);
       } else if (data) {
         setProductosDisponibles(data);
       }
@@ -87,7 +103,7 @@ export function ProductosDisponibles({
               type="number"
               min="1"
               max={producto.cantidad}
-              value={cantidades[producto.id] || ""}
+              value={cantidades[producto.id] || 1}
               onChange={(e) =>
                 manejarCambioCantidad(producto.id, parseInt(e.target.value))
               }

@@ -115,7 +115,7 @@ export function CrearCuenta({ onCancelar }: CrearCuentaProps) {
           {error && <p className="text-red-500">{error}</p>}
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={onCancelar}>
-              Cancelar
+              Regresar
             </Button>
             <Button
               type="submit"

@@ -30,19 +30,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface CarritoProps {
   carrito: ItemCarrito[];
   eliminarDelCarrito: (itemId: string) => void;
   actualizarCantidadCarrito: (itemId: string, nuevaCantidad: number) => void;
+  setSeccionActiva: (seccion: string) => void;
 }
 
 export function Carrito({
   carrito,
   eliminarDelCarrito,
   actualizarCantidadCarrito,
+  setSeccionActiva,
 }: CarritoProps) {
   const [productos, setProductos] = useState<{ [key: string]: Producto }>({});
   const [direccionEnvio, setDireccionEnvio] = useState("");
@@ -50,7 +51,6 @@ export function Carrito({
   const [codigoPostal, setCodigoPostal] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -82,9 +82,106 @@ export function Carrito({
 
   const manejarCompra = async () => {
     if (direccionEnvio && ciudad && codigoPostal && metodoPago) {
-      // Aquí iría la lógica para procesar la compra
-      // Por ejemplo, crear una transacción y actualizar el inventario
-      setShowConfirmation(true);
+      try {
+        // Iniciar una transacción en Supabase
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error("Usuario no autenticado");
+
+        const { data: carritoItems, error: carritoError } = await supabase
+          .from("carrito")
+          .select("*")
+          .eq("usuario_id", user.id);
+
+        if (carritoError) throw carritoError;
+        if (!carritoItems || carritoItems.length === 0) {
+          throw new Error("El carrito está vacío");
+        }
+
+        let totalCompra = 0;
+
+        try {
+          // Procesar cada item en el carrito
+          for (const item of carritoItems) {
+            // Verificar stock y obtener información del producto
+            const { data: producto, error: productoError } = await supabase
+              .from("productos")
+              .select("*")
+              .eq("id", item.producto_id)
+              .single();
+
+            if (productoError) throw productoError;
+            if (!producto || producto.cantidad < item.cantidad) {
+              throw new Error(
+                `Producto ${
+                  producto?.nombre || item.producto_id
+                } no disponible o stock insuficiente`
+              );
+            }
+
+            // Actualizar inventario
+            const { error: updateError } = await supabase
+              .from("productos")
+              .update({ cantidad: producto.cantidad - item.cantidad })
+              .eq("id", item.producto_id);
+
+            if (updateError) throw updateError;
+
+            // Calcular total
+            const subtotal = producto.precio * item.cantidad;
+            totalCompra += subtotal;
+
+            // Crear la transacción
+            const { error: transaccionError } = await supabase
+              .from("transacciones")
+              .insert({
+                usuario_id: user.id,
+                producto_id: item.producto_id,
+                cantidad: item.cantidad,
+                precio_total: subtotal,
+                tipo: "compra",
+              });
+            if (transaccionError) throw transaccionError;
+
+            // Crear la transacción de venta
+            const { error: transaccionVentaError } = await supabase
+              .from("transacciones")
+              .insert({
+                usuario_id: producto.usuario_id,
+                producto_id: item.producto_id,
+                cantidad: item.cantidad,
+                precio_total: subtotal,
+                tipo: "venta",
+              });
+            if (transaccionVentaError) throw transaccionError;
+          }
+
+          // Limpiar el carrito del usuario
+          const { error: limpiarCarritoError } = await supabase
+            .from("carrito")
+            .delete()
+            .eq("usuario_id", user.id);
+
+          if (limpiarCarritoError) throw limpiarCarritoError;
+
+          // Actualizar el estado local
+          actualizarCantidadCarrito("", 0);
+          setShowConfirmation(true);
+
+          // Mostrar mensaje de éxito
+          alert(
+            `¡Compra realizada con éxito! Total: $${totalCompra.toFixed(2)}`
+          );
+        } catch (innerError) {
+          // Si algo sale mal, revertir la transacción
+          await supabase.rpc("revertir_transaccion");
+          throw innerError;
+        }
+      } catch (error) {
+        console.error("Error al procesar la compra:", error);
+        alert(`Hubo un error al procesar su compra: ${error}`);
+      }
     } else {
       alert("Por favor, complete todos los campos del formulario de compra.");
     }
@@ -239,7 +336,7 @@ export function Carrito({
             <p>Método de pago: {metodoPago}</p>
           </div>
           <DialogFooter>
-            <Button onClick={() => router.push("/historial-transacciones")}>
+            <Button onClick={() => setSeccionActiva("Historial")}>
               Ver Mis Compras y Ventas
             </Button>
           </DialogFooter>

@@ -32,7 +32,9 @@ export function BarraSuperior({
           <h1 className="text-2xl font-semibold text-gray-900 hidden md:block">
             {seccionActiva}
           </h1>
-          <h1 className="text-2xl font-bold text-green-700 ml-12">SABA</h1>
+          <h1 className="text-2xl font-bold text-green-700 ml-12 md:hidden">
+            SABA
+          </h1>
           <div className="flex items-center justify-end space-x-4">
             <div className="">Hola! {usuarioActual?.nombre}</div>
             <DropdownMenu>

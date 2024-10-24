@@ -148,7 +148,7 @@ export default function Home() {
 
     switch (seccionActiva) {
       case "Inicio":
-        return <Inicio />;
+        return <Inicio setSeccionActiva={setSeccionActiva} />;
       case "Productos":
         return <ProductosDisponibles agregarAlCarrito={agregarAlCarrito} />;
       case "Mis Productos":
@@ -159,6 +159,7 @@ export default function Home() {
             carrito={carrito}
             eliminarDelCarrito={eliminarDelCarrito}
             actualizarCantidadCarrito={actualizarCantidadCarrito}
+            setSeccionActiva={setSeccionActiva}
           />
         );
       case "Historial":
@@ -181,7 +182,7 @@ export default function Home() {
           />
         );
       default:
-        return <Inicio />;
+        return <Inicio setSeccionActiva={setSeccionActiva} />;
     }
   };
 
