@@ -24,23 +24,30 @@ export function HistorialTransacciones({
 }: HistorialTransaccionesProps) {
   const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
   const [productos, setProductos] = useState<{ [key: string]: Producto }>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTransacciones = async () => {
-      const { data, error } = await supabase
-        .from("transacciones")
-        .select("*")
-        .eq("usuario_id", usuarioId)
-        .order("created_at", { ascending: false });
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("transacciones")
+          .select("*")
+          .eq("usuario_id", usuarioId)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching transactions:", error);
-      } else if (data) {
-        setTransacciones(data);
-        fetchProductos(data.map((t) => t.producto_id));
+        if (error) {
+          console.error("Error fetching transactions:", error);
+        } else if (data) {
+          setTransacciones(data);
+          fetchProductos(data.map((t) => t.producto_id));
+        }
+      } catch (e) {
+        console.log(e);
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchTransacciones();
   }, [usuarioId]);
 
@@ -60,6 +67,13 @@ export function HistorialTransacciones({
       setProductos(productosMap);
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-green-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <Card>
