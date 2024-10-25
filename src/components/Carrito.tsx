@@ -218,7 +218,7 @@ export function Carrito({
                     alt={producto.nombre}
                     width={60}
                     height={60}
-                    className="rounded-md object-cover"
+                    className="rounded-md object-contain"
                   />
                   <div>
                     <h3 className="font-semibold">{producto.nombre}</h3>

@@ -81,7 +81,7 @@ export function ProductosDisponibles({
               alt={producto.nombre}
               width={200}
               height={200}
-              className="w-full h-48 object-cover rounded-t-lg"
+              className="w-full h-48 object-contain rounded-t-lg"
             />
           </CardHeader>
           <CardContent className="flex-grow">
