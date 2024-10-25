@@ -52,23 +52,31 @@ export function Carrito({
   const [codigoPostal, setCodigoPostal] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProductos = async () => {
-      const productoIds = carrito.map((item) => item.producto_id);
-      const { data, error } = await supabase
-        .from("productos")
-        .select("*")
-        .in("id", productoIds);
+      try {
+        setLoading(true);
+        const productoIds = carrito.map((item) => item.producto_id);
+        const { data, error } = await supabase
+          .from("productos")
+          .select("*")
+          .in("id", productoIds);
 
-      if (error) {
-        console.error("Error fetching products:", error);
-      } else if (data) {
-        const productosMap = data.reduce((acc, producto) => {
-          acc[producto.id] = producto;
-          return acc;
-        }, {} as { [key: string]: Producto });
-        setProductos(productosMap);
+        if (error) {
+          console.error("Error fetching products:", error);
+        } else if (data) {
+          const productosMap = data.reduce((acc, producto) => {
+            acc[producto.id] = producto;
+            return acc;
+          }, {} as { [key: string]: Producto });
+          setProductos(productosMap);
+        }
+      } catch (e) {
+        console.error("Error fetching products:", e);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductos();
@@ -189,6 +197,13 @@ export function Carrito({
       alert("Por favor, complete todos los campos del formulario de compra.");
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-green-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <Card className="w-full max-w-4xl mx-auto">

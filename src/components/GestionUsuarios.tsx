@@ -31,18 +31,26 @@ export function GestionUsuarios() {
     email: "",
     rol: "",
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUsuarios = async () => {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("usuarios")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      if (error) {
+        if (error) {
+          console.error("Error fetching users:", error);
+        } else if (data) {
+          setUsuarios(data);
+        }
+      } catch (error) {
         console.error("Error fetching users:", error);
-      } else if (data) {
-        setUsuarios(data);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUsuarios();
@@ -71,6 +79,13 @@ export function GestionUsuarios() {
       setNuevoUsuario({ nombre: "", email: "", rol: "" });
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-green-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <Card>

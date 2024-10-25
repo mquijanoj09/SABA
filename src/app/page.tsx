@@ -61,6 +61,7 @@ export default function Home() {
     } else if (data.session?.user) {
       fetchUsuario(data.session.user.id);
       setSeccionActiva("Inicio");
+      window.scrollTo(0, 0);
       setErrorLogin("");
     }
   };
@@ -189,7 +190,7 @@ export default function Home() {
 
   if (!usuarioActual) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500 p-6">
         {renderizarContenido()}
       </div>
     );

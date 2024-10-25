@@ -28,34 +28,42 @@ export function ProductosDisponibles({
     []
   );
   const [cantidades, setCantidades] = useState<{ [key: string]: number }>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProductos = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      try {
+        setLoading(true);
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (userError) {
-        console.error("Error obteniendo el usuario actual:", userError);
-        return;
-      }
+        if (userError) {
+          console.error("Error obteniendo el usuario actual:", userError);
+          return;
+        }
 
-      if (!user) {
-        console.error("No hay usuario autenticado");
-        return;
-      }
+        if (!user) {
+          console.error("No hay usuario autenticado");
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("productos")
-        .select("*")
-        .gt("cantidad", 0)
-        .neq("usuario_id", user.id);
+        const { data, error } = await supabase
+          .from("productos")
+          .select("*")
+          .gt("cantidad", 0)
+          .neq("usuario_id", user.id);
 
-      if (error) {
-        console.error("Error obteniendo productos:", error);
-      } else if (data) {
-        setProductosDisponibles(data);
+        if (error) {
+          console.error("Error obteniendo productos:", error);
+        } else if (data) {
+          setProductosDisponibles(data);
+        }
+      } catch (e) {
+        console.error("Error obteniendo productos:", e);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductos();
@@ -70,6 +78,13 @@ export function ProductosDisponibles({
     agregarAlCarrito(producto, cantidad);
     setCantidades({ ...cantidades, [producto.id]: 0 });
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-green-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

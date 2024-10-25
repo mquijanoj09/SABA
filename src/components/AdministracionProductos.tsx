@@ -37,6 +37,8 @@ export function AdministracionProductos({
   const [editandoProducto, setEditandoProducto] = useState<Producto | null>(
     null
   );
+  const [loading, setLoading] = useState(true);
+
   const [nuevoProducto, setNuevoProducto] = useState<Partial<Producto>>({
     nombre: "",
     cantidad: 0,
@@ -49,15 +51,22 @@ export function AdministracionProductos({
 
   useEffect(() => {
     const fetchProductos = async () => {
-      const { data, error } = await supabase
-        .from("productos")
-        .select("*")
-        .eq("usuario_id", usuarioId);
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("productos")
+          .select("*")
+          .eq("usuario_id", usuarioId);
 
-      if (error) {
+        if (error) {
+          console.error("Error fetching products:", error);
+        } else if (data) {
+          setProductos(data);
+        }
+      } catch (error) {
         console.error("Error fetching products:", error);
-      } else if (data) {
-        setProductos(data);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductos();
@@ -131,6 +140,13 @@ export function AdministracionProductos({
       setProductos(productos.filter((p) => p.id !== id));
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-16 h-16 border-4 border-green-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
 
   return (
     <div className="space-y-6">
