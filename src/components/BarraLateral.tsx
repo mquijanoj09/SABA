@@ -8,7 +8,6 @@ import {
   ShoppingBasket,
   FileText,
   Bell,
-  PieChart,
   Users,
   Settings,
   Menu,
@@ -39,6 +38,7 @@ export function BarraLateral({
     {
       nombre: "Mis Productos",
       icono: ShoppingBag,
+      notConsumidor: true,
     },
     { nombre: "Carrito", icono: ShoppingBasket },
     {
@@ -47,13 +47,8 @@ export function BarraLateral({
     },
     { nombre: "Alertas", icono: Bell },
     {
-      nombre: "Estadísticas",
-      icono: PieChart,
-    },
-    {
       nombre: "Usuarios",
       icono: Users,
-
       soloAdmin: true,
     },
     { nombre: "Configuracion", icono: Settings },
@@ -63,6 +58,7 @@ export function BarraLateral({
     <nav className="mt-8 space-y-2">
       {elementosNav.map((elemento) => {
         if (elemento.soloAdmin && tipoUsuario !== "administrador") return null;
+        if (elemento.notConsumidor && tipoUsuario === "consumidor") return null;
         return (
           <Button
             key={elemento.nombre}
@@ -86,10 +82,10 @@ export function BarraLateral({
   );
 
   return (
-    <div className="bg-white">
+    <div className="">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col bg-white text-green-800 h-full w-64 p-4 shadow-lg">
-        <h1 className="text-2xl font-bold mb-8">SABA</h1>
+      <div className="hidden fixed md:flex flex-col bg-white text-green-800 h-full w-64 z-50 p-4 shadow-lg">
+        <h1 className="text-2xl font-bold">SABA</h1>
         <NavContent />
       </div>
 

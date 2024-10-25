@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 interface CarritoProps {
   carrito: ItemCarrito[];
@@ -171,7 +172,9 @@ export function Carrito({
 
           // Mostrar mensaje de éxito
           alert(
-            `¡Compra realizada con éxito! Total: $${totalCompra.toFixed(2)}`
+            `¡Compra realizada con éxito! Total: $${formatCurrency(
+              totalCompra
+            )}`
           );
         } catch (innerError) {
           // Si algo sale mal, revertir la transacción
@@ -220,7 +223,7 @@ export function Carrito({
                   <div>
                     <h3 className="font-semibold">{producto.nombre}</h3>
                     <p className="text-sm text-gray-500">
-                      ${producto.precio.toFixed(2)} c/u
+                      ${formatCurrency(producto.precio)} c/u
                     </p>
                   </div>
                 </div>
@@ -309,7 +312,7 @@ export function Carrito({
       {carrito.length > 0 && (
         <CardFooter className="flex justify-between items-center">
           <div className="text-xl font-semibold">
-            Total: ${calcularTotal().toFixed(2)}
+            Total: ${formatCurrency(calcularTotal())}
           </div>
           <Button
             onClick={manejarCompra}
@@ -329,7 +332,7 @@ export function Carrito({
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <p>Total: ${calcularTotal().toFixed(2)}</p>
+            <p>Total: ${formatCurrency(calcularTotal())}</p>
             <p>
               Dirección de envío: {direccionEnvio}, {ciudad}, {codigoPostal}
             </p>

@@ -6,7 +6,6 @@ import { AdministracionProductos } from "@/components/AdministracionProductos";
 import { Carrito } from "@/components/Carrito";
 import { HistorialTransacciones } from "@/components/HistorialTransacciones";
 import { Alertas } from "@/components/Alertas";
-import { Estadisticas } from "@/components/Estadisticas";
 import { GestionUsuarios } from "@/components/GestionUsuarios";
 import { ContenidoNoAutorizado } from "@/components/ContenidoNoAutorizado";
 import { Configuracion } from "@/components/Configuracion";
@@ -152,7 +151,11 @@ export default function Home() {
       case "Productos":
         return <ProductosDisponibles agregarAlCarrito={agregarAlCarrito} />;
       case "Mis Productos":
-        return <AdministracionProductos usuarioId={usuarioActual.id} />;
+        return usuarioActual.rol !== "consumidor" ? (
+          <AdministracionProductos usuarioId={usuarioActual.id} />
+        ) : (
+          <ContenidoNoAutorizado />
+        );
       case "Carrito":
         return (
           <Carrito
@@ -165,9 +168,7 @@ export default function Home() {
       case "Historial":
         return <HistorialTransacciones usuarioId={usuarioActual.id} />;
       case "Alertas":
-        return <Alertas usuarioId={usuarioActual.id} />;
-      case "Estadísticas":
-        return <Estadisticas usuarioId={usuarioActual.id} />;
+        return <Alertas />;
       case "Usuarios":
         return usuarioActual.rol === "administrador" ? (
           <GestionUsuarios />
@@ -201,7 +202,7 @@ export default function Home() {
         onNavegacion={setSeccionActiva}
         tipoUsuario={usuarioActual.rol}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:pl-64">
         <BarraSuperior
           setSeccionActiva={setSeccionActiva}
           seccionActiva={seccionActiva}

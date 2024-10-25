@@ -1,92 +1,156 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Bell } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+} from "recharts";
 
-interface Alerta {
-  id: string;
-  usuario_id: string;
-  mensaje: string;
-  tipo: "info" | "warning" | "error";
-  created_at: string;
-}
+// Static data for fruits
+const frutasAntioquia = [
+  {
+    mes: "Septiembre",
+    categorias: {
+      "Alta Producción": ["Mango", "Piña"],
+      "Ideal en Clima Fresco": ["Aguacate"],
+      "Demanda Alta": ["Aguacate", "Maracuyá"],
+    },
+  },
+  {
+    mes: "Octubre",
+    categorias: {
+      "Alta Producción": ["Banano", "Piña"],
+      "Demanda Baja": ["Aguacate"],
+      "Buen Valor para Exportación": ["Maracuyá"],
+    },
+  },
+  {
+    mes: "Noviembre",
+    categorias: {
+      Sobreproducción: ["Mango"],
+      "Demanda Baja": ["Guayaba"],
+      "Demanda Estable": ["Banano"],
+    },
+  },
+];
 
-interface AlertasProps {
-  usuarioId: string;
-}
+const getMesActual = (): string => {
+  const opciones: Intl.DateTimeFormatOptions = { month: "long" };
+  return new Date().toLocaleDateString("es-ES", opciones);
+};
 
-export function Alertas({ usuarioId }: AlertasProps) {
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
+export function Alertas() {
+  const [mesesAMostrar, setMesesAMostrar] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<"Mejor" | "Peor">(
+    "Mejor"
+  );
+  const mesActual = getMesActual();
 
   useEffect(() => {
-    const fetchAlertas = async () => {
-      const { data, error } = await supabase
-        .from("alertas")
-        .select("*")
-        .eq("usuario_id", usuarioId)
-        .order("created_at", { ascending: false });
+    const mesIndice = new Date().getMonth();
+    const meses = [];
+    for (let i = -2; i <= 3; i++) {
+      const nuevoMes = new Date(
+        new Date().setMonth(mesIndice + i)
+      ).toLocaleDateString("es-ES", { month: "long" });
+      meses.push(nuevoMes.charAt(0).toUpperCase() + nuevoMes.slice(1));
+    }
+    setMesesAMostrar(meses);
+  }, []);
 
-      if (error) {
-        console.error("Error fetching alerts:", error);
-      } else if (data) {
-        setAlertas(data);
-      }
-    };
-    fetchAlertas();
-    const channel = supabase
-      .channel("alertas")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "alertas" },
-        (payload) => {
-          if (payload.new.usuario_id === usuarioId) {
-            setAlertas((prevAlertas) => [
-              payload.new as Alerta,
-              ...prevAlertas,
-            ]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [usuarioId]);
+  const productosFiltrados = frutasAntioquia.filter((producto) =>
+    mesesAMostrar.includes(producto.mes)
+  );
 
   return (
-    <Card>
+    <Card className="max-w-4xl mx-auto p-4">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-green-700">
           Alertas y Notificaciones
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {alertas.length === 0 ? (
-          <p className="text-center text-gray-500">No hay alertas nuevas.</p>
-        ) : (
-          <div className="space-y-4">
-            {alertas.map((alerta) => (
-              <Alert
-                key={alerta.id}
-                variant={alerta.tipo === "error" ? "destructive" : "default"}
-              >
-                <Bell className="h-4 w-4" />
-                <AlertTitle>
-                  {alerta.tipo === "info"
-                    ? "Información"
-                    : alerta.tipo === "warning"
-                    ? "Advertencia"
-                    : "Error"}
-                </AlertTitle>
-                <AlertDescription>{alerta.mensaje}</AlertDescription>
-              </Alert>
-            ))}
-          </div>
-        )}
+        <ScrollArea className="h-96">
+          {productosFiltrados.map((producto, index) => (
+            <div key={index} className="mb-8">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  {producto.mes}
+                  {producto.mes === mesActual && (
+                    <Badge className="ml-2 text-white bg-green-500">
+                      Mes Actual
+                    </Badge>
+                  )}
+                </h2>
+              </div>
+              <Separator className="my-2" />
+
+              {Object.entries(producto.categorias).map(
+                ([categoria, frutas], idx) => (
+                  <div key={idx} className="mb-4">
+                    <h3 className="text-sm font-medium">{categoria}</h3>
+                    <div className="flex space-x-2">
+                      {frutas.map((fruta: string, i: number) => (
+                        <Badge key={i} className="bg-blue-100 text-blue-700">
+                          {fruta}
+                        </Badge>
+                      ))}
+                    </div>
+                    <Separator className="my-2" />
+                  </div>
+                )
+              )}
+
+              <div className="flex space-x-4">
+                <Badge
+                  onClick={() => setSelectedCategory("Mejor")}
+                  className={`cursor-pointer ${
+                    selectedCategory === "Mejor" ? "bg-green-300" : ""
+                  }`}
+                >
+                  Mejores Productos
+                </Badge>
+                <Badge
+                  onClick={() => setSelectedCategory("Peor")}
+                  className={`cursor-pointer ${
+                    selectedCategory === "Peor" ? "bg-red-300" : ""
+                  }`}
+                >
+                  Peores Productos
+                </Badge>
+              </div>
+
+              <ResponsiveContainer width="100%" height={200} className="mt-4">
+                <BarChart
+                  data={producto.categorias[
+                    selectedCategory === "Mejor"
+                      ? "Alta Producción"
+                      : "Demanda Baja"
+                  ]?.map((fruta) => ({
+                    fruta,
+                    cantidad: Math.floor(Math.random() * 10) + 1,
+                  }))}
+                >
+                  <XAxis dataKey="fruta" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Bar
+                    dataKey="cantidad"
+                    fill={selectedCategory === "Mejor" ? "#82ca9d" : "#f56565"}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ))}
+        </ScrollArea>
       </CardContent>
     </Card>
   );

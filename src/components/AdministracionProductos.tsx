@@ -24,6 +24,7 @@ import Image from "next/image";
 import { Producto } from "@/types";
 import { Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 interface AdministracionProductosProps {
   usuarioId: string;
@@ -282,7 +283,7 @@ export function AdministracionProductos({
               </CardDescription>
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-lg text-green-600">
-                  ${producto.precio.toFixed(2)}
+                  ${formatCurrency(producto.precio)}
                 </span>
                 <span className="text-sm text-gray-500">{producto.region}</span>
               </div>

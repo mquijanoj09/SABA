@@ -15,6 +15,7 @@ import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { Producto } from "@/types";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProductosDisponiblesProps {
   agregarAlCarrito: (producto: Producto, cantidad: number) => void;
@@ -90,7 +91,7 @@ export function ProductosDisponibles({
             </CardDescription>
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-lg text-green-600">
-                ${producto.precio.toFixed(2)}
+                ${formatCurrency(producto.precio)}
               </span>
               <span className="text-sm text-gray-500">{producto.region}</span>
             </div>

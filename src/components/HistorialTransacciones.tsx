@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Transaccion, Producto } from "@/types";
 import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 interface HistorialTransaccionesProps {
   usuarioId: string;
@@ -94,7 +95,7 @@ export function HistorialTransacciones({
                 </TableCell>
                 <TableCell>{transaccion.cantidad}</TableCell>
                 <TableCell className="text-right">
-                  ${transaccion.precio_total.toFixed(2)}
+                  ${formatCurrency(transaccion.precio_total)}
                 </TableCell>
               </TableRow>
             ))}
