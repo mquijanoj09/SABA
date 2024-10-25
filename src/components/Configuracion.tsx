@@ -1,88 +1,117 @@
+"use client";
+
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Usuario } from "@/app/page";
+import { Usuario } from "@/types";
+import { supabase } from "@/lib/supabase";
 
-interface ConfiguracionContenidoProps {
+interface ConfiguracionProps {
   usuarioActual: Usuario;
-  actualizarUsuario: (usuario: Usuario) => void;
+  actualizarUsuario: (usuarioActualizado: Partial<Usuario>) => void;
 }
 
 export function Configuracion({
   usuarioActual,
   actualizarUsuario,
-}: ConfiguracionContenidoProps) {
-  const [formData, setFormData] = useState({
-    nombre: usuarioActual.nombre,
-    email: usuarioActual.email,
-    contrasena: "",
-  });
+}: ConfiguracionProps) {
+  const [nombre, setNombre] = useState(usuarioActual.nombre);
+  const [email, setEmail] = useState(usuarioActual.email);
+  const [contrasenaActual, setContrasenaActual] = useState("");
+  const [nuevaContrasena, setNuevaContrasena] = useState("");
+  const [confirmarContrasena, setConfirmarContrasena] = useState("");
 
-  const manejarEnvio = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    actualizarUsuario({
-      ...usuarioActual,
-      nombre: formData.nombre,
-      email: formData.email,
-    });
+    const actualizaciones: Partial<Usuario> = {};
+
+    if (nombre !== usuarioActual.nombre) {
+      actualizaciones.nombre = nombre;
+    }
+
+    if (email !== usuarioActual.email) {
+      actualizaciones.email = email;
+    }
+
+    if (Object.keys(actualizaciones).length > 0) {
+      await actualizarUsuario(actualizaciones);
+    }
+
+    if (nuevaContrasena && nuevaContrasena === confirmarContrasena) {
+      const { error } = await supabase.auth.updateUser({
+        password: nuevaContrasena,
+      });
+      if (error) {
+        console.error("Error updating password:", error);
+      } else {
+        console.log("Password updated successfully");
+        setContrasenaActual("");
+        setNuevaContrasena("");
+        setConfirmarContrasena("");
+      }
+    }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuración</CardTitle>
-        <CardDescription>
-          Administre la configuración de su cuenta y preferencias.
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold text-green-700">
+          Configuración de la Cuenta
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={manejarEnvio}>
-          <div className="grid w-full items-center gap-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input
-                id="nombre"
-                value={formData.nombre}
-                onChange={(e) =>
-                  setFormData({ ...formData, nombre: e.target.value })
-                }
-                placeholder="Su nombre"
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                placeholder="Su email"
-                type="email"
-              />
-            </div>
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="contrasena">Nueva Contraseña</Label>
-              <Input
-                id="contrasena"
-                value={formData.contrasena}
-                onChange={(e) =>
-                  setFormData({ ...formData, contrasena: e.target.value })
-                }
-                placeholder="Ingrese nueva contraseña"
-                type="password"
-              />
-            </div>
-            <Button type="submit">Guardar Cambios</Button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nombre">Nombre</Label>
+            <Input
+              id="nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+            />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contrasenaActual">Contraseña Actual</Label>
+            <Input
+              id="contrasenaActual"
+              type="password"
+              value={contrasenaActual}
+              onChange={(e) => setContrasenaActual(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="nuevaContrasena">Nueva Contraseña</Label>
+            <Input
+              id="nuevaContrasena"
+              type="password"
+              value={nuevaContrasena}
+              onChange={(e) => setNuevaContrasena(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmarContrasena">
+              Confirmar Nueva Contraseña
+            </Label>
+            <Input
+              id="confirmarContrasena"
+              type="password"
+              value={confirmarContrasena}
+              onChange={(e) => setConfirmarContrasena(e.target.value)}
+            />
+          </div>
+          <Button type="submit">Guardar Cambios</Button>
         </form>
       </CardContent>
     </Card>

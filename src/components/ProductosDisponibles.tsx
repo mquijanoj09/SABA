@@ -1,23 +1,21 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import Image from "next/image";
 import { Input } from "@/components/ui/input";
-import { Producto } from "@/app/page";
+import Image from "next/image";
+import { ShoppingCart } from "lucide-react";
+import { Producto } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { formatCurrency } from "@/lib/utils";
 
 interface ProductosDisponiblesProps {
   agregarAlCarrito: (producto: Producto, cantidad: number) => void;
@@ -26,33 +24,44 @@ interface ProductosDisponiblesProps {
 export function ProductosDisponibles({
   agregarAlCarrito,
 }: ProductosDisponiblesProps) {
-  const [productosDisponibles] = useState<Producto[]>([
-    {
-      id: 1,
-      nombre: "Tomates",
-      cantidad: 100,
-      precio: 2.99,
-      ubicacion: "Almacén Central",
-      imagen: "https://cdn.britannica.com/77/170677-050-F7333D51/lettuce.jpg",
-      region: "Costa",
-      descripcion: "Tomates frescos de la costa",
-    },
-    {
-      id: 2,
-      nombre: "Papas",
-      cantidad: 200,
-      precio: 1.5,
-      ubicacion: "Almacén Norte",
-      imagen: "https://cdn.britannica.com/77/170677-050-F7333D51/lettuce.jpg",
-      region: "Sierra",
-      descripcion: "Papas de la sierra, ideales para freír",
-    },
-    // Añade más productos aquí
-  ]);
+  const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>(
+    []
+  );
+  const [cantidades, setCantidades] = useState<{ [key: string]: number }>({});
 
-  const [cantidades, setCantidades] = useState<{ [key: number]: number }>({});
+  useEffect(() => {
+    const fetchProductos = async () => {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-  const manejarCambioCantidad = (id: number, cantidad: number) => {
+      if (userError) {
+        console.error("Error obteniendo el usuario actual:", userError);
+        return;
+      }
+
+      if (!user) {
+        console.error("No hay usuario autenticado");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*")
+        .gt("cantidad", 0)
+        .neq("usuario_id", user.id);
+
+      if (error) {
+        console.error("Error obteniendo productos:", error);
+      } else if (data) {
+        setProductosDisponibles(data);
+      }
+    };
+    fetchProductos();
+  }, []);
+
+  const manejarCambioCantidad = (id: string, cantidad: number) => {
     setCantidades({ ...cantidades, [id]: cantidad });
   };
 
@@ -63,72 +72,54 @@ export function ProductosDisponibles({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Productos Disponibles en el Mercado</CardTitle>
-        <CardDescription>
-          Explore y compre productos frescos de diferentes regiones.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Imagen</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Región</TableHead>
-              <TableHead>Cantidad Disponible</TableHead>
-              <TableHead>Precio</TableHead>
-              <TableHead>Ubicación</TableHead>
-              <TableHead>Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {productosDisponibles.map((producto) => (
-              <TableRow key={producto.id}>
-                <TableCell>
-                  <Image
-                    src={producto.imagen}
-                    alt={producto.nombre}
-                    width={50}
-                    height={50}
-                    className="rounded-full object-cover"
-                  />
-                </TableCell>
-                <TableCell>{producto.nombre}</TableCell>
-                <TableCell>{producto.region}</TableCell>
-                <TableCell>{producto.cantidad}</TableCell>
-                <TableCell>${producto.precio.toFixed(2)}</TableCell>
-                <TableCell>{producto.ubicacion}</TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="number"
-                      min="1"
-                      max={producto.cantidad}
-                      value={cantidades[producto.id] || ""}
-                      onChange={(e) =>
-                        manejarCambioCantidad(
-                          producto.id,
-                          parseInt(e.target.value)
-                        )
-                      }
-                      className="w-16"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => manejarAgregarAlCarrito(producto)}
-                    >
-                      Agregar al carrito
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {productosDisponibles.map((producto) => (
+        <Card key={producto.id} className="flex flex-col h-full">
+          <CardHeader>
+            <Image
+              src={producto.imagen}
+              alt={producto.nombre}
+              width={200}
+              height={200}
+              className="w-full h-48 object-contain rounded-t-lg"
+            />
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <CardTitle className="text-xl mb-2">{producto.nombre}</CardTitle>
+            <CardDescription className="text-sm text-gray-600 mb-2">
+              {producto.descripcion}
+            </CardDescription>
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-semibold text-lg text-green-600">
+                ${formatCurrency(producto.precio)}
+              </span>
+              <span className="text-sm text-gray-500">{producto.region}</span>
+            </div>
+            <div className="text-sm text-gray-500">
+              Disponibles: {producto.cantidad}
+            </div>
+          </CardContent>
+          <CardFooter className="flex items-center justify-between">
+            <Input
+              type="number"
+              min="1"
+              max={producto.cantidad}
+              value={cantidades[producto.id] || 1}
+              onChange={(e) =>
+                manejarCambioCantidad(producto.id, parseInt(e.target.value))
+              }
+              className="w-20"
+            />
+            <Button
+              onClick={() => manejarAgregarAlCarrito(producto)}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Agregar
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
   );
 }
